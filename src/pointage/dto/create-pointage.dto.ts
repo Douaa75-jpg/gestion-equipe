@@ -1,16 +1,16 @@
-import { IsInt, IsString, IsOptional, IsDateString } from 'class-validator';
+// create-pointage.dto.ts
+import { IsNotEmpty, IsString, IsOptional, IsDateString, IsNumber } from 'class-validator';
 
 export class CreatePointageDto {
-  @IsInt()
-  personnelId: number;
+  @IsNotEmpty() @IsNumber()
+  personnelId: number; // ID du personnel (employé)
 
-  @IsString()
+  @IsNotEmpty() @IsString()
   empreinteDigitale: string;
 
-  @IsDateString()
+  @IsNotEmpty() @IsDateString()
   heureArrivee: string;
 
-  @IsOptional()
-  @IsDateString()
+  @IsOptional() @IsDateString()
   heureDepart?: string;
 }

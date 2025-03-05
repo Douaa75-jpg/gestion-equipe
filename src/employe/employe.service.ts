@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { CreatePointageDto } from 'src/pointage/dto/create-pointage.dto';
 import { PrismaService } from 'src/prisma/prisma.service'; // PrismaService pour accéder au Prisma Client
+import { Role, PrismaClient } from '@prisma/client'; // Importer Role
 
 @Injectable()
 export class EmployeService {
@@ -35,10 +36,12 @@ export class EmployeService {
   
 
   async getAllEmployes() {
-    return await this.prisma.employe.findMany({
-      include: { personnel: true },  // Inclure la relation avec Personnel
+    return await this.prisma.personnel.findMany({
+      where: { role:  Role.EMPLOYE }, // نجيب كان الموظفين
+      include: { employes: true }, // نزيد نجيب المعلومات المرتبطة بجدول employe
     });
   }
+  
   
 
   // Fonction pour récupérer l'historique des pointages d'un employé
@@ -98,4 +101,4 @@ export class EmployeService {
 
     return autorisation;
   }
-}
+} 

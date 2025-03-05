@@ -28,23 +28,22 @@ model Personnel {
   password         String
   numTel           String      @default("")
   role             Role        @default(EMPLOYE)
-  pointages        Pointage[]  // علاقة مع جدول Pointage
-
-  employe          Employe?    @relation // العلاقة مع Employe
-  superviseur      Superviseur? @relation // العلاقة مع Superviseur
-  rh               RH?         @relation // العلاقة مع RH
-  administrateur   Administrateur? @relation // العلاقة مع Administrateur
 
   notification     Notification[]
+  pointages   Pointage[]  // Relation avec Pointage
+  employes         Employe[]   // Relation avec Employe
+  superviseurs     Superviseur[] // Relation avec Superviseur
+  rh               RH[]        // Relation avec RH
+  administrateurs  Administrateur[] // Relation avec Administrateur
 }
 
 model Employe {
   id                 Int          @id @default(autoincrement())
   personnelId        Int          @unique
-  historiquePointage Pointage[]    // علاقة مع Pointage
+  historiquePointage Pointage[]    // Relation avec Pointage
   superviseurId      Int?
   superviseur        Superviseur? @relation(fields: [superviseurId], references: [id])
-  personnel          Personnel    @relation(fields: [personnelId], references: [id]) // علاقة مع Personnel
+  personnel          Personnel    @relation(fields: [personnelId], references: [id]) // Relation avec Personnel
 
   demandes           Demande[]
 }
@@ -53,41 +52,48 @@ model Superviseur {
   id          Int       @id @default(autoincrement())
   personnelId Int       @unique
   idEquipe    Int
-  equipe      Employe[]
+  equipe      Employe[] // Relation avec Employe
 
-  personnel Personnel @relation(fields: [personnelId], references: [id]) // العلاقة مع Personnel
-  demandes  Demande[] // العلاقة مع Demande
+  personnel   Personnel @relation(fields: [personnelId], references: [id]) // Relation avec Personnel
+  demandes    Demande[] // Relation avec Demande
 }
 
 model RH {
   id          Int @id @default(autoincrement())
   personnelId Int @unique
 
-  personnel Personnel @relation(fields: [personnelId], references: [id]) // العلاقة مع Personnel
+  personnel   Personnel @relation(fields: [personnelId], references: [id]) // Relation avec Personnel
 
-  rapports Rapport[] // علاقة مع Rapport
-  demandes Demande[] // علاقة مع Demande
+  rapports    Rapport[] // Relation avec Rapport
+  demandes    Demande[] // Relation avec Demande
 }
 
 model Administrateur {
   id          Int @id @default(autoincrement())
   personnelId Int @unique
 
-  personnel Personnel @relation(fields: [personnelId], references: [id]) // العلاقة مع Personnel
+  personnel   Personnel @relation(fields: [personnelId], references: [id]) // Relation avec Personnel
 }
 
 model Pointage {
   id                Int       @id @default(autoincrement())
-  date              DateTime
-  heureArrivee      DateTime
+  date              DateTime  @default(now())
+  heureArrivee      DateTime  @default(now())
   heureDepart       DateTime?
-  employeId         Int
+  employeId         Int?
+  personnelId       Int
   empreinteDigitale String
-  statut            String    @default("PRESENT") // PRESENT, ABSENT, RETARD
-  personnelId      Int
+  statut            StatutPresence @default(PRESENT)
 
-  personnel        Personnel  @relation(fields: [personnelId], references: [id])
-  employe           Employe   @relation(fields: [employeId], references: [id])  // تحديد العلاقة مع Employe
+  employe   Employe?  @relation(fields: [employeId], references: [id])
+  personnel Personnel @relation(fields: [personnelId], references: [id], map: "fk_pointage_personnel")
+}
+
+
+enum StatutPresence {
+  PRESENT
+  ABSENT
+  RETARD
 }
 
 model Demande {
