@@ -1,0 +1,147 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum StatutDemande {
+  EN_ATTENTE
+  APPROUVE
+  REJETE
+}
+
+enum Role {
+  EMPLOYE
+  SUPERVISEUR
+  RH
+  ADMINISTRATEUR
+}
+
+model Personnel {
+  id               Int         @id @default(autoincrement())
+  nom              String
+  prenom           String
+  email            String      @unique
+  password         String
+  numTel           String      @default("")
+  role             Role        @default(EMPLOYE)
+  pointages        Pointage[]  // علاقة مع جدول Pointage
+
+  employe          Employe?    @relation // العلاقة مع Employe
+  superviseur      Superviseur? @relation // العلاقة مع Superviseur
+  rh               RH?         @relation // العلاقة مع RH
+  administrateur   Administrateur? @relation // العلاقة مع Administrateur
+
+  notification     Notification[]
+}
+
+model Employe {
+  id                 Int          @id @default(autoincrement())
+  personnelId        Int          @unique
+  historiquePointage Pointage[]    // علاقة مع Pointage
+  superviseurId      Int?
+  superviseur        Superviseur? @relation(fields: [superviseurId], references: [id])
+  personnel          Personnel    @relation(fields: [personnelId], references: [id]) // علاقة مع Personnel
+
+  demandes           Demande[]
+}
+
+model Superviseur {
+  id          Int       @id @default(autoincrement())
+  personnelId Int       @unique
+  idEquipe    Int
+  equipe      Employe[]
+
+  personnel Personnel @relation(fields: [personnelId], references: [id]) // العلاقة مع Personnel
+  demandes  Demande[] // العلاقة مع Demande
+}
+
+model RH {
+  id          Int @id @default(autoincrement())
+  personnelId Int @unique
+
+  personnel Personnel @relation(fields: [personnelId], references: [id]) // العلاقة مع Personnel
+
+  rapports Rapport[] // علاقة مع Rapport
+  demandes Demande[] // علاقة مع Demande
+}
+
+model Administrateur {
+  id          Int @id @default(autoincrement())
+  personnelId Int @unique
+
+  personnel Personnel @relation(fields: [personnelId], references: [id]) // العلاقة مع Personnel
+}
+
+model Pointage {
+  id                Int       @id @default(autoincrement())
+  date              DateTime
+  heureArrivee      DateTime
+  heureDepart       DateTime?
+  employeId         Int
+  empreinteDigitale String
+  statut            String    @default("PRESENT") // PRESENT, ABSENT, RETARD
+  personnelId      Int
+
+  personnel        Personnel  @relation(fields: [personnelId], references: [id])
+  employe           Employe   @relation(fields: [employeId], references: [id])  // تحديد العلاقة مع Employe
+}
+
+model Demande {
+  id            Int           @id @default(autoincrement())
+  dateDebut     DateTime
+  dateFin       DateTime
+  heureDebut    DateTime? 
+  heureFin      DateTime?
+  employeId     Int
+  statut        StatutDemande
+  motif         String? // Facultatif
+  superviseurId Int?
+  rhId          Int? // RH qui valide
+
+  superviseur        Superviseur?        @relation(fields: [superviseurId], references: [id])
+  rh                 RH?                 @relation(fields: [rhId], references: [id])
+  employe            Employe             @relation(fields: [employeId], references: [id])
+  notification       Notification[]
+  conge              Conge?
+  autorisationSortie AutorisationSortie?
+}
+
+model Conge {
+  id      Int     @id @default(autoincrement())
+  type    String
+  demande Demande @relation(fields: [id], references: [id])
+}
+
+model AutorisationSortie {
+  id         Int      @id @default(autoincrement())
+  heureDebut DateTime
+  heureFin   DateTime
+  statut     String
+  demandeId  Int
+  demande    Demande  @relation(fields: [id], references: [id])
+}
+
+model Rapport {
+  id      Int    @id @default(autoincrement())
+  type    String
+  contenu String
+  rhId    Int
+
+  rh RH @relation(fields: [rhId], references: [id])
+}
+
+model Notification {
+  id          Int       @id @default(autoincrement())
+  type        String
+  message     String
+  personnelId Int // Clé étrangère pour lier à Personnel
+  demandeId   Int?
+  personnel   Personnel @relation(fields: [personnelId], references: [id])
+  demande     Demande?  @relation(fields: [demandeId], references: [id])
+
+  createdAt DateTime @default(now())
+}
